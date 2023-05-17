@@ -55,12 +55,12 @@ void loop() {
     _fps = _fpsTarget.to!int; // 30 by default
 
     double frameCounter = 0;
-    double lastTime = Time.currTime;
+    double lastTime = currTime();
     double unprocessedTime = 0;
 
     while (_isRunning) {
         bool doNeedRender = false;
-        double startTime = Time.currTime;
+        double startTime = currTime();
         double passedTime = startTime - lastTime;
         lastTime = startTime;
 

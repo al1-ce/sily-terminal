@@ -191,9 +191,20 @@ private struct Element {
                 }
 
                 cursorMoveTo(tp.x, tp.y);
-                write(_backgroundColor.escape(true));
-                write(_textColor.escape(false));
-                write(line);
+                if (_backgroundColor.a > 0.1) {
+                    write(_backgroundColor.escape(true));
+                    write(_textColor.escape(false));
+                    write(line);
+
+                } else {
+                    write(_textColor.escape(false));
+                    for (int k = 0; k < line.length; ++k) {
+                        dchar ch = line[k];
+                        col c = getBackColorAt(tp + ivec2(k, 0));
+                        write(c.escape(true));
+                        write(ch);
+                    }
+                }
                 write("\033[m");
             }
         }
@@ -202,7 +213,12 @@ private struct Element {
             // top
             for (int x = 0; x < size.x; ++x) {
                 cursorMoveTo(pos.x + x, pos.y / 2);
-                if (_drawBorderBackground) write(_backgroundColor.escape(true));
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                    write(_backgroundColor.escape(true));
+                } else {
+                    col c = getBackColorAt(pos + ivec2(x, 0));
+                    write(c.escape(true));
+                }
                 write(_borderColor.escape(false));
                 if (x == 0) {
                     write(_borderChars[0]);
@@ -216,21 +232,39 @@ private struct Element {
             // side left
             for (int y = 1; y + 1 < height; ++y) {
                 cursorMoveTo(pos.x, pos.y / 2 + y);
-                if (_drawBorderBackground) write(_backgroundColor.escape(true));
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                    write(_backgroundColor.escape(true));
+                } else {
+                    col c = getBackColorAt(pos + ivec2(0, y));
+                    write(c.escape(true));
+                }
+
                 write(_borderColor.escape(false));
                 write(_borderChars[3]);
             }
             // side right
             for (int y = 1; y + 1 < height; ++y) {
                 cursorMoveTo(pos.x + size.x - 1, pos.y / 2 + y);
-                if (_drawBorderBackground) write(_backgroundColor.escape(true));
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                    write(_backgroundColor.escape(true));
+                } else {
+                    col c = getBackColorAt(pos + ivec2(size.x - 1, y));
+                    write(c.escape(true));
+                }
+
                 write(_borderColor.escape(false));
                 write(_borderChars[4]);
             }
             // bottom
             for (int x = 0; x < size.x; ++x) {
                 cursorMoveTo(pos.x + x, pos.y / 2 + height - 1);
-                if (_drawBorderBackground) write(_backgroundColor.escape(true));
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                    write(_backgroundColor.escape(true));
+                } else {
+                    col c = getBackColorAt(pos + ivec2(x, size.y - 1));
+                    write(c.escape(true));
+                }
+
                 write(_borderColor.escape(false));
                 if (x == 0) {
                     write(_borderChars[5]);
@@ -304,9 +338,37 @@ private struct Element {
         return (*_parent)._backgroundColor;
     }
 
+    col getBackColorAt(ivec2 pos) {
+        if (_parent.isNull) return col(0.0f, 0.0f);
+        Node[] el = (*_parent)._children;
+
+        col _col = _parent.bgcol;
+        long _pri = long.min;
+
+        foreach (c; el) {
+            if (c.ptr == &this) { continue; }
+            if (isColliding(pos / ivec2(1, 2), c.getPosition / ivec2(1, 2), c.size / ivec2(1, 2))) {
+                if (c.priority > _pri && c.bgcol.a > 0.1) {
+                    _pri = c.priority;
+                    _col = c.bgcol;
+                }
+                // _col = col(1, 0, 0);
+            }
+        }
+        
+        return _col;
+    }
+
     void sortChildren() {
         _children.sort!((a, b) => (*a)._priority < (*b)._priority);
     }
+}
+
+public bool isColliding(ivec2 pos, ivec2 tl, ivec2 wh) {
+    return pos.x >= tl.x && 
+           pos.y >= tl.y &&
+           pos.x <= tl.x + wh.x && 
+           pos.y <= tl.y + wh.y;
 }
 
 void forceRender() {
@@ -544,7 +606,7 @@ Node bigPanel = query!"#nodeid";
 Node[] labels = query!".label";
 Node[] allNodes = query!"*"; 
 */
-Node query(string selector)(Node from = root) if (selector.length >  && selector[0] == '#') {
+Node query(string selector)(Node from = root) if (selector.length > 0 && selector[0] == '#') {
     if ((*from.ptr)._id == selector[1..$]) return from;
     Node[] children = (*from.ptr)._children;
     foreach (Node child; children) {

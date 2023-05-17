@@ -1,6 +1,7 @@
 module sily.terminal.input;
 
 import std.conv: to;
+import std.algorithm.searching: canFind;
 
 import sily.queue;
 import sily.terminal;
@@ -102,14 +103,6 @@ bool pollEvent() {
     // \e[X~: x=[15,17-21,23,24]: f5-12
 
     // \e[1;XA: A-D, X = 2!s, 3!a, 4!as, 5!c, 6!cs, 7!ca, 8!csa, for meta look normal keys
-
-    // \e[96;x;yM - mouse wheel up
-    // \e[97;x;yM - mouse wheel down
-    // \e[32;x;yM - lmb
-    // \e[33;x;yM - mmb
-    // \e[34;x;yM - rmb
-    // \e[160;x;yM - mbb
-    // \e[161;x;yM - mfb
     string seq = "";
     while (kbhit()) {
         seq ~= cast(char) getch();
@@ -139,11 +132,68 @@ bool pollEvent() {
         // TODO: Symbols
         return true;
     }
+
+    advaceMouseAll();
     
     // sequence
     if (seq.length >= 2 && seq[0] == 27) {
         if (seq[1] == '[') {
+            import std.stdio;
             // normal sequence
+
+            // \e[96;x;yM - mouse wheel up
+            // \e[97;x;yM - mouse wheel down
+            // \e[32;x;yM - lmb
+            // \e[33;x;yM - mmb
+            // \e[34;x;yM - rmb
+            // \e[160;x;yM - mbb
+            // \e[161;x;yM - mfb
+            // 012345678
+            // 123456789
+            // e[96;...M
+            // e[161;...M
+
+            if (seq.length > 5 && seq[$-1] == 'M') {
+                string sq = seq[2..5];
+                if (sq == "96;") {
+                    advanceMouse(Button.wheelUp, true);
+                    inputQueue.push(ikey(Key.mouseWheelUp, Mod.n, mouseButtonState(Button.wheelUp)));
+                }
+                if (sq == "97;") {
+                    advanceMouse(Button.wheelDown, true);
+                    inputQueue.push(ikey(Key.mouseWheelDown, Mod.n, mouseButtonState(Button.wheelDown)));
+                }
+                if (sq == "32;") {
+                    advanceMouse(Button.left, true);
+                    inputQueue.push(ikey(Key.mouseLeft, Mod.n, mouseButtonState(Button.left)));
+                }
+                if (sq == "33;") {
+                    advanceMouse(Button.middle, true);
+                    inputQueue.push(ikey(Key.mouseMiddle, Mod.n, mouseButtonState(Button.middle)));
+                }
+                if (sq == "34;") {
+                    advanceMouse(Button.right, true);
+                    inputQueue.push(ikey(Key.mouseRight, Mod.n, mouseButtonState(Button.right)));
+                }
+                if (["96;", "97;", "32;", "33;", "34;"].canFind(sq)) {
+                    int x = 0;
+                    int y = 0;
+                    bool isX = true;
+                    string tmp = "";
+                    foreach (ch; seq[5..$]) {
+                        if (ch == ';') {
+                            isX = false;
+                            x = tmp.to!int - 1;
+                            tmp = "";
+                            continue;
+                        }
+                        if (ch == 'M') break;
+                        tmp ~= ch;
+                    }
+                    y = tmp.to!int - 1;
+                    lastMousePos = uvec2(x, y);
+                }
+            }
             
         } else
         if (seq.length == 3 && seq[1] == 'O') {
@@ -173,14 +223,14 @@ bool pollEvent() {
 }
 
 /// Returns new InputKey with set mod keys
-Input ikey(uint key, uint mod = Mod.n) {
+Input ikey(uint key, uint mod = Mod.n, ButtonState state = ButtonState.press) {
     Key enumKey = to!Key(key);
-    return ikey(enumKey, mod);
+    return ikey(enumKey, mod, state);
 }
 /// Ditto
-Input ikey(Key key, uint mod = Mod.n) {
+Input ikey(Key key, uint mod = Mod.n, ButtonState state = ButtonState.press) {
     // return Input(key, mod.hasFlag(Mod.c), mod.hasFlag(Mod.s), mod.hasFlag(Mod.a), mod.hasFlag(Mod.m));
-    return Input(key, mod);
+    return Input(key, mod, state);
 } 
 
 private bool hasFlag(uint flags, uint flag) {
@@ -253,6 +303,8 @@ struct InputEvent {
     // public bool meta = false;
     public uint mod = Mod.n;
 
+    public ButtonState state = ButtonState.press;
+
     bool opEquals()(in Input b) const {
         // return key == b.key && ctrl == b.ctrl && shift == b.shift && alt == b.alt && meta == b.meta;
         return key == b.key && mod == b.mod;
@@ -290,13 +342,53 @@ static this() {
     ];
 }
 
+private void advanceMouse(Button b, bool press = false) {
+    if (mouseState[b] == 0 && press) {
+        mouseState[b] = 1;
+    } else
+    if (mouseState[b] == 1) {
+        mouseState[b] = 2;
+    } else
+    if (mouseState[b] == 2 && press) {
+        mouseState[b] = 3;
+    } else
+    if (mouseState[b] == 3) {
+        mouseState[b] = 0;
+    }
+
+    if (b == Button.wheelUp || b == Button.wheelDown) {
+        if (mouseState[b] > 1) mouseState[b] = 0;
+    }
+}
+
+ButtonState mouseButtonState(Button b) {
+    return cast(ButtonState) mouseState[b];
+}
+
+private void advaceMouseAll() {
+    foreach (k; mouseState.keys) {
+        advanceMouse(k);
+    }
+}
+
 private uvec2 lastMousePos = uvec2(1);
+
+uvec2 mousePosition() {
+    return lastMousePos;
+}
 
 /// Mouse buttons
 alias Button = MouseButton;
 /// Ditto
 enum MouseButton {
     left, middle, right, wheelUp, wheelDown, forward, backward
+}
+
+/// Mouse button state
+alias ButtonState = MouseButtonState;
+/// Ditto
+enum MouseButtonState: ubyte {
+    none = 0, press, hold, release
 }
 
 /// Normal input keys
@@ -311,7 +403,8 @@ enum InputKey {
 
     space = 32,
     num0 = 48, num1, num2, num3, num4, num5, num6, num7, num8, num9,
-    a = 97, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+    a = 97, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z,
+    mouseWheelUp = 256, mouseWheelDown, mouseLeft, mouseMiddle, mouseRight
 
 }
 

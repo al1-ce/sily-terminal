@@ -217,6 +217,22 @@ version(Posix) {
     }
 }
 
+version(Windows) {
+    import core.sys.windows.windows;
+
+    uvec2 cursorGetPosition() {
+        HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+        CONSOLE_SCREEN_BUFFER_INFO cbsi;
+        if (GetConsoleScreenBufferInfo(hConsoleOutput, &cbsi)) {
+            COORD c =  cbsi.dwCursorPosition;
+            return uvec2(c.X, c.Y);
+        } else {
+            // The function failed. Call GetLastError() for details.
+            return uvec2(0);
+        }
+    }
+}
+
 /** 
 Moves cursor in terminal to `{x, y}` or to `x`. **COORDINATES START FROM 1**
 Params:
