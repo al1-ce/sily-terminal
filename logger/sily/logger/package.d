@@ -65,7 +65,6 @@ struct Log {
         if (f.isOpen) {
             _logFile = f;
             allowFile = true;
-            writefln("SETTING FILE");
         } else {
             if (_logFile.isOpen) _logFile.close();
             allowFile = false;
@@ -75,12 +74,10 @@ struct Log {
     /// Ditto
     void logFile(string filepath) @property {
         if (filepath.length) {
-            writefln("SETTING FILE");
             _logFile = File(filepath, "w");
             import std.datetime;
             _logFile.writeln("Opening log file ", Clock.currTime.toString);
             allowFile = true;
-            writefln("LOG FILE %s, %s", _logFile, _logFile.isOpen);
         } else {
             if (_logFile.isOpen) _logFile.close();
             allowFile = false;
@@ -236,7 +233,6 @@ struct Log {
             );
             _logFile.writeln(_msg);
             if (alwaysFlush) _logFile.flush();
-            writefln("LOGGING FILE");
         }
         for (int i = 1; i < msg.length; ++i) {
             if (allowTTY) {
