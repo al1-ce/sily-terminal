@@ -3,6 +3,7 @@
 name "logtest"
 dependency "sily" path="/g:/sily-dlang/"
 dependency "sily-terminal:logger" path="/g:/sily-terminal/"
+lflags "SUBSYSTEM:WINDOWS"
 +/
 module test.log;
 

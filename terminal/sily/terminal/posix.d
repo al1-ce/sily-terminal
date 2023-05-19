@@ -39,7 +39,7 @@ import core.sys.posix.unistd: read;
 import core.sys.posix.sys.select: select, fd_set, FD_ZERO, FD_SET;
 import core.sys.posix.sys.time: timeval;
 
-import std.stdio: stdin, stdout;
+import std.stdio: stdin, stdout, File;
 
 private extern(C) void cfmakeraw(termios *termios_p);
 

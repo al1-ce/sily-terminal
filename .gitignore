@@ -15,6 +15,7 @@ lib/
 # Executables
 *.exe
 bin/
+*.pdb
 
 # DUB
 .dub
