@@ -21,12 +21,12 @@ private Node _root;
 
 static this() {
     _root = Node(new Element(
-                Node(), 
-                [], 
-                "root", 
-                [], 
-                Size.full, 
-                ivec2(0), 
+                Node(),
+                [],
+                "root",
+                [],
+                Size.full,
+                ivec2(0),
                 col(0, 0, 0, 0),
                 col(0, 0, 0, 0),
                 ""d,
@@ -92,7 +92,7 @@ private struct Element {
     // Should be always true at start or forceRender at start
     bool _renderNeeded = true;
 
-    
+
     /**
     Creates "tree" representation in format:
     ---
@@ -125,7 +125,7 @@ private struct Element {
         col pcolor = getParentColor();
         int height = size.y / 2;
         if (isTopEdge || isBottomEdge) height += 1;
-        
+
         // TODO: calculate other children color overlap
         // Kinda fixed by border but still a thing
         // (A is not child of B but sill overlays with wrong color)
@@ -177,8 +177,8 @@ private struct Element {
                 int lct = cast(int) t.length;
                 if (_halign == TextHAlign.center) {
                     // offset it by (width - line width) / 2
-                    tp.x = tp.x + (size.x - len) / 2 - borderRed;                
-                } else 
+                    tp.x = tp.x + (size.x - len) / 2 - borderRed;
+                } else
                 if (_halign == TextHAlign.right){ // right
                     // offset it by widht - line width
                     tp.x = tp.x + size.x - len - borderRed;
@@ -213,7 +213,7 @@ private struct Element {
             // top
             for (int x = 0; x < size.x; ++x) {
                 cursorMoveTo(pos.x + x, pos.y / 2);
-                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) {
                     write(_backgroundColor.escape(true));
                 } else {
                     col c = getBackColorAt(pos + ivec2(x, 0));
@@ -232,7 +232,7 @@ private struct Element {
             // side left
             for (int y = 1; y + 1 < height; ++y) {
                 cursorMoveTo(pos.x, pos.y / 2 + y);
-                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) {
                     write(_backgroundColor.escape(true));
                 } else {
                     col c = getBackColorAt(pos + ivec2(0, y));
@@ -245,7 +245,7 @@ private struct Element {
             // side right
             for (int y = 1; y + 1 < height; ++y) {
                 cursorMoveTo(pos.x + size.x - 1, pos.y / 2 + y);
-                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) {
                     write(_backgroundColor.escape(true));
                 } else {
                     col c = getBackColorAt(pos + ivec2(size.x - 1, y));
@@ -258,7 +258,7 @@ private struct Element {
             // bottom
             for (int x = 0; x < size.x; ++x) {
                 cursorMoveTo(pos.x + x, pos.y / 2 + height - 1);
-                if (_drawBorderBackground && _backgroundColor.a > 0.1) { 
+                if (_drawBorderBackground && _backgroundColor.a > 0.1) {
                     write(_backgroundColor.escape(true));
                 } else {
                     col c = getBackColorAt(pos + ivec2(x, size.y - 1));
@@ -319,7 +319,7 @@ private struct Element {
         s.y = s.y == -2 ? th : s.y;
 
         ivec2 _parentSize = (*_parent).getSize();
-        ivec2 _maxSize = _parentSize - _pos; 
+        ivec2 _maxSize = _parentSize - _pos;
         s = s.min(_maxSize);
 
         // TODO: fix auto
@@ -355,7 +355,7 @@ private struct Element {
                 // _col = col(1, 0, 0);
             }
         }
-        
+
         return _col;
     }
 
@@ -365,9 +365,9 @@ private struct Element {
 }
 
 public bool isColliding(ivec2 pos, ivec2 tl, ivec2 wh) {
-    return pos.x >= tl.x && 
+    return pos.x >= tl.x &&
            pos.y >= tl.y &&
-           pos.x <= tl.x + wh.x && 
+           pos.x <= tl.x + wh.x &&
            pos.y <= tl.y + wh.y;
 }
 
@@ -519,7 +519,7 @@ struct Node {
     TextVAlign valign() {
         return (*ptr)._valign;
     }
-    
+
     /**
     Set/get border characters in format [LeftUp, Up, RightUp, Left, Right, LeftDown, Down, RightDown].
     */
@@ -602,9 +602,9 @@ struct Node {
 /**
 Returns node based on selector, similar to CSS selectors.
 Example:
-Node bigPanel = query!"#nodeid"; 
+Node bigPanel = query!"#nodeid";
 Node[] labels = query!".label";
-Node[] allNodes = query!"*"; 
+Node[] allNodes = query!"*";
 */
 Node query(string selector)(Node from = root) if (selector.length > 0 && selector[0] == '#') {
     if ((*from.ptr)._id == selector[1..$]) return from;

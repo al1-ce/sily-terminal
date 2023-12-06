@@ -116,7 +116,7 @@ void render() {
     // We shouldn't use force render here
     // forceRender();
     requestRender();
-    
+
     if (sizeofBuffer != 0) {
         flushBuffer();
         clearBuffer();

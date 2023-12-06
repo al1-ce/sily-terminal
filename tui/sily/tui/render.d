@@ -12,7 +12,7 @@ import sily.vector;
 
 private dstring _screenBuffer = "";
 
-/** 
+/**
 Escapes color into bash sequence according to selected color mode
 Params:
     c = Color
@@ -24,7 +24,7 @@ string escape(Color c, bool b, ColorMode m) {
     switch (m) {
         case ColorMode.truecolor: return c.toTrueColorString(b);
         case ColorMode.ansi256: return c.toAnsiString(b);
-        case ColorMode.ansi8: 
+        case ColorMode.ansi8:
         default: return c.toAnsi8String(b);
     }
 }

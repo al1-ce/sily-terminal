@@ -24,7 +24,7 @@ alias EventUpdate = EventType.update;
 // TODO: rename
 template addEventListener(EventType t) {
     static if (t == EventType.input) {
-        void addEventListener(void delegate(io.InputEvent) f) { 
+        void addEventListener(void delegate(io.InputEvent) f) {
             _inputCallback ~= f;
         }
     } else {
@@ -37,12 +37,12 @@ template addEventListener(EventType t) {
 }
 
 size_t getListenerCount(EventType t)() {
-    static if (t == EventType.input) { 
-        return _inputCallback.length;       
-    } else 
+    static if (t == EventType.input) {
+        return _inputCallback.length;
+    } else
     static if (t == EventType.update) {
-        return _updateCallback.length;       
-    } 
+        return _updateCallback.length;
+    }
     else assert(0, "Unknown event type.");
 }
 
@@ -65,7 +65,7 @@ void pollInputEvent() {
 }
 
 void addTimer(bool repeating = false)(ulong time, void delegate() f) {
-    
+
     // ADD LOGIC
 
     static if (repeating) {

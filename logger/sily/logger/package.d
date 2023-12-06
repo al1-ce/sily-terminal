@@ -2,16 +2,20 @@
 module sily.logger;
 
 import std.datetime: DateTime, Clock;
-import std.array: replace, split;
+import std.array: replace, split, join;
 import std.string: capitalize;
 import std.conv: to;
 import std.format: format;
 import std.traits: Unqual;
 import std.stdio: writefln, writef, stdout, File;
 import std.math: round;
+import std.path: dirSeparator;
+import std.file: exists;
 
 import sily.terminal: terminalWidth;
 import sily.string: splitStringWidth;
+import sily.path: fixPath;
+
 static import sily.conv;
 
 struct Log {
@@ -28,6 +32,9 @@ struct Log {
     might be slow, but will prevent data loss on crashes
     +/
     bool alwaysFlush = false;
+
+    /// Should output in format: File(Line): Type: Message
+    bool simpleOutput = false;
 
     private File _logFile;
 
@@ -74,21 +81,32 @@ struct Log {
     /// Ditto
     void logFile(string filepath) @property {
         if (filepath.length) {
-            _logFile = File(filepath, "w");
-            import std.datetime;
-            _logFile.writeln("Opening log file ", Clock.currTime.toString);
+            _logFile = File(filepath.fixPath, "w");
+            import std.datetime: Clock;
+            import std.array: split;
+            import std.system;
+            import core.cpuid;
+            string ver = __VERSION__.to!string;
+            ver = (ver.length > 1 ? ver[0] ~ "." ~ ver[1..$] : ver);
+
+            _logFile.writeln("Logging started at ", (Clock.currTime.toLocalTime().to!string).split(".")[0], " (Local)");
+            _logFile.writeln("    File            : ", filepath.fixPath);
+            _logFile.writeln("    OS              : ", os, " ", isX86_64 ? "x64" : "x32");
+            _logFile.writeln("    Compiler        : ", __VENDOR__ ~ " version " ~ ver);
+            _logFile.writeln("    Compiled at     : ", __DATE__ ~ ", " ~ __TIME__);
+            _logFile.writeln("-----------------------------------------------");
             allowFile = true;
         } else {
             if (_logFile.isOpen) _logFile.close();
             allowFile = false;
         }
     }
-    
+
     /// Returns log file
     const(File) logFile() @property const {
         return _logFile;
     }
-    
+
     /// Flushes log file
     void flush() {
         if (isCustomFile()) _logFile.flush();
@@ -98,7 +116,7 @@ struct Log {
         return _logFile.isOpen && allowFile;
     }
 
-    /** 
+    /**
     This function logs `args` to stdout
     In order for the resulting log message to appear
     LogLevel must be greater or equal then globalLogLevel
@@ -125,12 +143,12 @@ struct Log {
     /// Ditto
     void info(int line = __LINE__, string file = __FILE__, S...)(S args) { log!(LogLevel.info, line, file)(args); }
     /// Ditto
-    void warning(int line = __LINE__, string file = __FILE__, S...)(S args) 
+    void warning(int line = __LINE__, string file = __FILE__, S...)(S args)
         { log!(LogLevel.warning, line, file)(args); }
     /// Ditto
     void error(int line = __LINE__, string file = __FILE__, S...)(S args) { log!(LogLevel.error, line, file)(args); }
     /// Ditto
-    void critical(int line = __LINE__, string file = __FILE__, S...)(S args) 
+    void critical(int line = __LINE__, string file = __FILE__, S...)(S args)
         { log!(LogLevel.critical, line, file)(args); }
     /// Ditto
     void fatal(int line = __LINE__, string file = __FILE__, S...)(S args) { log!(LogLevel.fatal, line, file)(args); }
@@ -138,97 +156,133 @@ struct Log {
     void log(LogLevel ll = LogLevel.trace, int line = __LINE__, string file = __FILE__, S...)(S args) {
         if (!logLevel.hasFlag(ll.highestOneBit)) return;
         string lstring = "";
-        if (formattingEnabled) {
+
+        if (simpleOutput) {
+            // File(Line): Type: Message
             if (ll.hasFlag(LogLevel.traceOnly)) {
-                lstring = "\033[90m%*-s\033[m".format(8, "Trace"); 
+                lstring = "Note";
             } else
             if (ll.hasFlag(LogLevel.infoOnly)) { // set to 92 for green
-                lstring = "\033[94m%*-s\033[m".format(8, "Info"); 
+                lstring = "Info";
             } else
             if (ll.hasFlag(LogLevel.warningOnly)) {
-                lstring = "\033[33m%*-s\033[m".format(8, "Warning"); 
+                lstring = "Warning";
             } else
             if (ll.hasFlag(LogLevel.errorOnly)) {
-                lstring = "\033[1;91m%*-s\033[m".format(8, "Error"); 
+                lstring = "Error";
             } else
             if (ll.hasFlag(LogLevel.criticalOnly)) {
-                lstring = "\033[1;101;30m%*-s\033[m".format(8, "Critical"); 
+                lstring = "Error";
             } else
             if (ll.hasFlag(LogLevel.fatalOnly)) {
-                lstring = "\033[1;101;97m%*-s\033[m".format(8, "Fatal"); 
+                lstring = "Error";
             } else {
-                lstring = "%*-s".format(8, "Message"); 
+                lstring = "Note";
+            }
+
+            dstring messages = sily.conv.format!dstring(args);
+
+            writefln("%s(%d): %s: %s",
+                file.split(dirSeparator)[$-1],
+                line,
+                lstring,
+                messages
+            );
+
+            return;
+        }
+
+        if (formattingEnabled) {
+            if (ll.hasFlag(LogLevel.traceOnly)) {
+                lstring = "\033[90m%*-s\033[m".format(8, "Trace");
+            } else
+            if (ll.hasFlag(LogLevel.infoOnly)) { // set to 92 for green
+                lstring = "\033[94m%*-s\033[m".format(8, "Info");
+            } else
+            if (ll.hasFlag(LogLevel.warningOnly)) {
+                lstring = "\033[33m%*-s\033[m".format(8, "Warning");
+            } else
+            if (ll.hasFlag(LogLevel.errorOnly)) {
+                lstring = "\033[1;91m%*-s\033[m".format(8, "Error");
+            } else
+            if (ll.hasFlag(LogLevel.criticalOnly)) {
+                lstring = "\033[1;101;30m%*-s\033[m".format(8, "Critical");
+            } else
+            if (ll.hasFlag(LogLevel.fatalOnly)) {
+                lstring = "\033[1;101;97m%*-s\033[m".format(8, "Fatal");
+            } else {
+                lstring = "%*-s".format(8, "Message");
             }
         } else {
             if (ll.hasFlag(LogLevel.traceOnly)) {
-                lstring = "%*-s".format(8, "Trace"); 
+                lstring = "%*-s".format(8, "Trace");
             } else
             if (ll.hasFlag(LogLevel.infoOnly)) { // set to 92 for green
-                lstring = "%*-s".format(8, "Info"); 
+                lstring = "%*-s".format(8, "Info");
             } else
             if (ll.hasFlag(LogLevel.warningOnly)) {
-                lstring = "%*-s".format(8, "Warning"); 
+                lstring = "%*-s".format(8, "Warning");
             } else
             if (ll.hasFlag(LogLevel.errorOnly)) {
-                lstring = "%*-s".format(8, "Error"); 
+                lstring = "%*-s".format(8, "Error");
             } else
             if (ll.hasFlag(LogLevel.criticalOnly)) {
-                lstring = "%*-s".format(8, "Critical"); 
+                lstring = "%*-s".format(8, "Critical");
             } else
             if (ll.hasFlag(LogLevel.fatalOnly)) {
-                lstring = "%*-s".format(8, "Fatal"); 
+                lstring = "%*-s".format(8, "Fatal");
             } else {
-                lstring = "%*-s".format(8, "Message"); 
+                lstring = "%*-s".format(8, "Message");
             }
         }
 
         dstring messages = sily.conv.format!dstring(args);
-        
-        int msgMaxWidth = terminalWidth - ("[00:00:00] Critical  %s:%d".format(file, line).length).to!int;
-        
+
+        int msgMaxWidth = terminalWidth -
+            ("[00:00:00] Critical  %s:%d".format(file.split(dirSeparator)[$-1], line).length).to!int;
+
         dstring[] msg = splitStringWidth(messages, msgMaxWidth);
-        
+
         if (allowTTY) {
             if (formattingEnabled) {
                 writefln("\033[90m[%s]\033[m %s %*-s \033[m\033[90m%s:%d\033[m",
-                    to!DateTime(Clock.currTime).timeOfDay, 
-                    lstring, 
+                    to!DateTime(Clock.currTime).timeOfDay,
+                    lstring,
                     msgMaxWidth, msg[0],
-                    file, line);
-            } else { 
+                    file.split(dirSeparator)[$-1], line);
+            } else {
                 writefln("[%s] %s %*-s %s:%d",
-                    to!DateTime(Clock.currTime).timeOfDay, 
-                    lstring, 
+                    to!DateTime(Clock.currTime).timeOfDay,
+                    lstring,
                     msgMaxWidth, msg[0],
-                    file, line);
+                    file.split(dirSeparator)[$-1], line);
             }
         }
-        import std.path: dirSeparator;
         if (isCustomFile()) {
             if (ll.hasFlag(LogLevel.traceOnly)) {
-                lstring = "%*-s".format(8, "Trace"); 
+                lstring = "%*-s".format(8, "Trace");
             } else
             if (ll.hasFlag(LogLevel.infoOnly)) { // set to 92 for green
-                lstring = "%*-s".format(8, "Info"); 
+                lstring = "%*-s".format(8, "Info");
             } else
             if (ll.hasFlag(LogLevel.warningOnly)) {
-                lstring = "%*-s".format(8, "Warning"); 
+                lstring = "%*-s".format(8, "Warning");
             } else
             if (ll.hasFlag(LogLevel.errorOnly)) {
-                lstring = "%*-s".format(8, "Error"); 
+                lstring = "%*-s".format(8, "Error");
             } else
             if (ll.hasFlag(LogLevel.criticalOnly)) {
-                lstring = "%*-s".format(8, "Critical"); 
+                lstring = "%*-s".format(8, "Critical");
             } else
             if (ll.hasFlag(LogLevel.fatalOnly)) {
-                lstring = "%*-s".format(8, "Fatal"); 
+                lstring = "%*-s".format(8, "Fatal");
             } else {
-                lstring = "%*-s".format(8, "Message"); 
+                lstring = "%*-s".format(8, "Message");
             }
             string _msg = format("%s:%d [%s] %s %*-s",
-                file.split(dirSeparator)[$-1], line, 
-                to!DateTime(Clock.currTime).timeOfDay, 
-                lstring, 
+                file.split(dirSeparator)[$-1], line,
+                to!DateTime(Clock.currTime).timeOfDay,
+                lstring,
                 msgMaxWidth, messages,
             );
             _logFile.writeln(_msg);
@@ -237,11 +291,30 @@ struct Log {
         for (int i = 1; i < msg.length; ++i) {
             if (allowTTY) {
                 if (formattingEnabled) {
-                    writefln("%*s%s\033[m", 20, " ", msg[i]); 
+                    writefln("%*s%s\033[m", 20, " ", msg[i]);
                 } else {
-                    writefln("%*s%s", 20, " ", msg[i]); 
+                    writefln("%*s%s", 20, " ", msg[i]);
                 }
             }
+        }
+    }
+
+    /// Creates new line (br)
+    void newline() {
+        if (allowTTY) writefln("");
+        if (isCustomFile()) {
+            _logFile.writeln("");
+            if (alwaysFlush) _logFile.flush();
+        }
+    }
+
+    /// Writes raw message to log
+    void logRaw(S...)(S args) {
+        dstring messages = sily.conv.format!dstring(args);
+        if (allowTTY) writefln(messages);
+        if (isCustomFile()) {
+            _logFile.writeln(messages);
+            if (alwaysFlush) _logFile.flush();
         }
     }
 }
@@ -253,29 +326,35 @@ static this() {
 }
 
 /// Alias to same method in `private Log defaultLogger`, outputs only into stdout
-void message(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void message(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.off, line, file)(args); }
 /// Ditto
-void trace(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void trace(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.trace, line, file)(args); }
 /// Ditto
-void info(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void info(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.info, line, file)(args); }
 /// Ditto
-void warning(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void warning(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.warning, line, file)(args); }
 /// Ditto
-void error(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void error(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.error, line, file)(args); }
 /// Ditto
-void critical(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void critical(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.critical, line, file)(args); }
 /// Ditto
-void fatal(int line = __LINE__, string file = __FILE__, S...)(S args) 
+void fatal(int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(LogLevel.fatal, line, file)(args); }
 /// Ditto
-void log(LogLevel ll = LogLevel.trace, int line = __LINE__, string file = __FILE__, S...)(S args) 
+void log(LogLevel ll = LogLevel.trace, int line = __LINE__, string file = __FILE__, S...)(S args)
     { defaultLogger.log!(ll, line, file)(args); }
+
+/// Creates new line (br)
+void newline() { defaultLogger.newline(); }
+
+/// Writes raw message to log
+void logRaw(S...)(S args) { defaultLogger.logRaw(args); }
 
 private uint highestOneBit(uint i) {
     i |= (i >>  1);
@@ -315,7 +394,7 @@ enum LogLevel: ubyte {
     all = ubyte.max,
 }
 
-/** 
+/**
 Prints horizontal ruler
 Params:
   pattern = Symbol to fill line with
@@ -338,7 +417,7 @@ hr('#', "ERROR", "\033[91m", "\033[101m");
 // ################# ERROR ###################
 ---
 */
-void hr(dchar pattern = '─', dstring message = "", string lineFormat = "", string msgFormat = "", 
+void hr(dchar pattern = '─', dstring message = "", string lineFormat = "", string msgFormat = "",
         bool __logFormatEnabled = true) {
     int tw = terminalWidth();
     if (message != "") {
@@ -346,8 +425,8 @@ void hr(dchar pattern = '─', dstring message = "", string lineFormat = "", str
         ulong mmod = message.length % 2 + tw % 2;
         ulong rlen = llen + (mmod == 2 || mmod == 0 ? 0 : 1);
         if (__logFormatEnabled) {
-            writef("%s%s%s %s%s%s %s%s%s", 
-                lineFormat, pattern.repeat(llen), "\033[m", 
+            writef("%s%s%s %s%s%s %s%s%s",
+                lineFormat, pattern.repeat(llen), "\033[m",
                 msgFormat, message, "\033[m",
                 lineFormat, pattern.repeat(rlen), "\033[m");
         } else {
@@ -363,12 +442,12 @@ void hr(dchar pattern = '─', dstring message = "", string lineFormat = "", str
     writef("\n");
 }
 
-/** 
+/**
 Params:
   title = Title of block
   message = Message to print in block
   width = Width of block. Set to -1 for auto
-  _align = Block align. -1 - left, 0 - center, 1 - right 
+  _align = Block align. -1 - left, 0 - center, 1 - right
 */
 void block(dstring title, dstring message, int width = -1, int _align = -1, bool __logFormatEnabled = true) {
     ulong maxLen = title.length;
@@ -405,7 +484,7 @@ void block(dstring title, dstring message, int width = -1, int _align = -1, bool
     }
 }
 
-/** 
+/**
 Prints message centered in terminal
 Params:
   message = Message to print
@@ -413,7 +492,7 @@ Params:
 void center(dstring message) {
     int tw = terminalWidth;
     dstring[] lines = message.split('\n');
-    foreach (line; lines) if (line.length > 0) { 
+    foreach (line; lines) if (line.length > 0) {
         if (line.length <= tw) {
             writef("%*s%s\n", (tw - line.length) / 2, "", line);
         } else {
@@ -425,7 +504,7 @@ void center(dstring message) {
     }
 }
 
-/** 
+/**
 Prints compiler info in format:
 Params:
   _center = Should info be printed in center (default true)
@@ -450,7 +529,7 @@ string getCompilerInfo() {
     return "[" ~ __VENDOR__ ~ ": v" ~ ver ~ "] Compiled at: " ~ __DATE__ ~ ", " ~ __TIME__;
 }
 
-/** 
+/**
 Params:
   b = ProgressBar struct
   width = Custom width. Set to `-1` for auto
@@ -518,7 +597,7 @@ struct ProgressBar {
     dchar before = '\0';
     dchar after = '\0';
     string[] colors = ["\033[31m", "\033[91m", "\033[33m", "\033[93m", "\033[32m", "\033[92m"];
-    
+
     /**
     Creates default progress bar with label
     Params:
