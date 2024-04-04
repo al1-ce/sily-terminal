@@ -14,124 +14,90 @@ else import std.stdio : write, writef;
 
 // LINK: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 
-/// Short alias to formatting enum
-alias FG = Foreground;
-/// Ditto
-alias BG = Background;
-/// Ditto
-alias FM = Formatting;
-/// Ditto
-alias FR = FormattingReset;
-
 /// Contains escape sequences for foreground colors
-enum Foreground : string {
-    reset = "\033[39m",
-    black = "\033[30m",
-    red = "\033[31m",
-    green = "\033[32m",
-    yellow = "\033[33m",
-    blue = "\033[34m",
-    magenta = "\033[35m",
-    cyan = "\033[36m",
-    ltgray = "\033[37m",
-    dkgray = "\033[90m",
-    ltred = "\033[91m",
-    ltgreen = "\033[92m",
-    ltyellow = "\033[93m",
-    ltblue = "\033[94m",
-    ltmagenta = "\033[95m",
-    ltcyan = "\033[96m",
-    white = "\033[97m",
+static struct FG {
+    @disable this();
+    public static const:
+    string RESET      = "\033[39m";
+    string BLACK      = "\033[30m";
+    string RED        = "\033[31m";
+    string GREEN      = "\033[32m";
+    string YELLOW     = "\033[33m";
+    string BLUE       = "\033[34m";
+    string MAGENTA    = "\033[35m";
+    string CYAN       = "\033[36m";
+    string LT_GRAY    = "\033[37m";
+    string DK_GRAY    = "\033[90m";
+    string LT_RED     = "\033[91m";
+    string LT_GREEN   = "\033[92m";
+    string LT_YELLOW  = "\033[93m";
+    string LT_BLUE    = "\033[94m";
+    string LT_MAGENTA = "\033[95m";
+    string LT_CYAN    = "\033[96m";
+    string WHITE      = "\033[97m";
 }
 
 /// Contains escape sequences for background colors
-enum Background : string {
-    reset = "\033[49m",
-    black = "\033[40m",
-    red = "\033[41m",
-    green = "\033[42m",
-    yellow = "\033[43m",
-    blue = "\033[44m",
-    magenta = "\033[45m",
-    cyan = "\033[46m",
-    ltgray = "\033[47m",
-    dkgray = "\033[100m",
-    ltred = "\033[101m",
-    ltgreen = "\033[102m",
-    ltyellow = "\033[103m",
-    ltblue = "\033[104m",
-    ltmagenta = "\033[105m",
-    ltcyan = "\033[106m",
-    white = "\033[107m"
+static struct BG {
+    @disable this();
+    public static const:
+    string RESET      = "\033[49m";
+    string BLACK      = "\033[40m";
+    string RED        = "\033[41m";
+    string GREEN      = "\033[42m";
+    string YELLOW     = "\033[43m";
+    string BLUE       = "\033[44m";
+    string MAGENTA    = "\033[45m";
+    string CYAN       = "\033[46m";
+    string LT_GRAY    = "\033[47m";
+    string DK_GRAY    = "\033[100m";
+    string LT_RED     = "\033[101m";
+    string LT_GREEN   = "\033[102m";
+    string LT_YELLOW  = "\033[103m";
+    string LT_BLUE    = "\033[104m";
+    string LT_MAGENTA = "\033[105m";
+    string LT_CYAN    = "\033[106m";
+    string WHITE      = "\033[107m";
 }
 
 /// Contains escape sequences for string formatting (bold, italics)
-enum Formatting : string {
-    bold = "\033[1m",
-    dim = "\033[2m",
-    italics = "\033[3m",
-    uline = "\033[4m",
-    blink = "\033[5m",
-    inverse = "\033[7m",
-    hidden = "\033[8m",
-    striked = "\033[9m",
-    dline = "\033[21m",
-    cline = "\033[4:3m"
+static struct FORMAT {
+    @disable this();
+    public static const:
+    string BOLD             = "\033[1m";
+    string DIM              = "\033[2m";
+    string ITALICS          = "\033[3m";
+    string UNDERLINE        = "\033[4m";
+    string BLINK            = "\033[5m";
+    string INVERSE          = "\033[7m";
+    string HIDDEN           = "\033[8m";
+    string STRIKED          = "\033[9m";
+    string DOUBLE_UNDERLINE = "\033[21m";
 }
 
 /// Contains escape sequences to reset string formatting
-enum FormattingReset : string {
-    reset = "\033[0m",
-    fullreset = "\033[m",
+static struct FRESET {
+    @disable this();
+    public static const:
+    string ALL              = "\033[0m";
+    string FULL             = "\033[m";
+    string FOREGROUND       = "\033[39m";
+    string BACKGROUND       = "\033[49m";
 
-    bold = "\033[21m",
-    dim = "\033[22m",
-    italics = "\033[22m",
-    uline = "\033[24m",
-    blink = "\033[25m",
-    inverse = "\033[27m",
-    hidden = "\033[28m",
-    striked = "\033[29m",
-    dline = "\033[24m",
-    cline = "\033[4:0m"
-}
-
-/* --------------------------------- OUTPUT --------------------------------- */
-
-/** 
-Casts args to string and writes to stdout
-Intended to be used to print formatting
----
-fwrite("White text", FG.red, "Red text", FG.reset, BG.red, "Red background", FR.fullreset);
----
-Params:
-  args = Text or one of formatting strings
-*/
-void fwrite(A...)(A args) {
-    foreach (arg; args) {
-        write(cast(string) arg);
-    }
-}
-
-/** 
-Casts args to string and writes to stdout with `\n` at the end
-Intended to be used to print formatting
----
-fwriteln("White text", FG.red, "Red text", FG.reset, BG.red, "Red background", FR.fullreset);
----
-Params:
-  args = Text or one of formatting strings
-*/
-void fwriteln(A...)(A args) {
-    foreach (arg; args) {
-        write(cast(string) arg);
-    }
-    write("\n");
+    string BOLD             = "\033[21m";
+    string DIM              = "\033[22m";
+    string ITALICS          = "\033[22m";
+    string UNDERLINE        = "\033[24m";
+    string BLINK            = "\033[25m";
+    string INVERSE          = "\033[27m";
+    string HIDDEN           = "\033[28m";
+    string STRIKED          = "\033[29m";
+    string DOUBLE_UNDERLINE = "\033[24m";
 }
 
 /* ------------------------------- LINE ERASE ------------------------------- */
 
-/** 
+/**
 Erases `num` lines in terminal starting with current.
 Params:
   num = Number of lines to erase
@@ -148,12 +114,12 @@ void eraseLines(int num) {
     }
 }
 
-/// Fully erases current line 
+/// Fully erases current line
 void eraseCurrentLine() {
     write("\033[2K");
 }
 
-/// Erases text from start of current line to cursor 
+/// Erases text from start of current line to cursor
 void eraseLineLeft() {
     write("\033[1K");
 }
@@ -185,16 +151,16 @@ version(Posix) {
             int r = getch(); ch = cast(char) r;
             // in case of getting stuck
             if (r == 17) {
-                if (!wasTerminalRaw) terminalModeReset(); 
+                if (!wasTerminalRaw) terminalModeReset();
                 return v;
             }
             if (!r) {
                 // error("Error reading response"); moveCursorTo(0);
-                if (!wasTerminalRaw) terminalModeReset(); 
+                if (!wasTerminalRaw) terminalModeReset();
                 return v;
             }
             buf[i] = ch;
-            // if (i != 0) { 
+            // if (i != 0) {
             //     import std.format: format;
             //     trace("buf[%d]: %c %d".format(i, ch, ch)); moveCursorTo(0);
             // }
@@ -233,7 +199,7 @@ version(Windows) {
     }
 }
 
-/** 
+/**
 Moves cursor in terminal to `{x, y}` or to `x`. **COORDINATES START FROM 1**
 Params:
   x = Column to move to
@@ -243,7 +209,7 @@ void cursorMoveTo(int x, int y) {
     writef("\033[%d;%df", y, x);
 }
 /// Ditto
-void cursorMoveTo(uvec2 pos) { 
+void cursorMoveTo(uvec2 pos) {
     writef("\033[%d;%df", pos.y, pos.x);
 }
 /// Ditto
@@ -258,9 +224,9 @@ void cursorMoveHome() {
 
 // TODO: add cursorMoveRel()
 
-/** 
+/**
 Moves cursor in terminal up by `lineAmount`
-Params: 
+Params:
   lineAmount = int
 */
 void cursorMoveUp(int lineAmount = 1) {
@@ -272,45 +238,45 @@ void cursorMoveUpScroll() {
     writef("\033M");
 }
 
-/** 
+/**
 Moves cursor in terminal up by`lineAmount` and sets cursor X to 1
-Params: 
+Params:
   lineAmount = int
 */
 void cursorMoveUpStart(int lineAmount = 1) {
     writef("\033[%dF", lineAmount);
 }
 
-/** 
+/**
 Moves cursor in terminal down by `lineAmount`
-Params: 
+Params:
   lineAmount = int
  */
 void cursorMoveDown(int lineAmount = 1) {
     writef("\033[%dB", lineAmount);
 }
 
-/** 
+/**
 Moves cursor in terminal down by`lineAmount` and sets cursor X to 1
-Params: 
+Params:
   lineAmount = int
 */
 void cursorMoveDownStart(int lineAmount = 1) {
     writef("\033[%dE", lineAmount);
 }
 
-/** 
+/**
 Moves cursor in terminal right by `columnAmount`
-Params: 
+Params:
   columnAmount = int
 */
 void cursorMoveRight(int columnAmount = 1) {
     writef("\033[%dC", columnAmount);
 }
 
-/** 
+/**
 Moves cursor in terminal left by `columnAmount`
-Params: 
+Params:
   columnAmount = int
 */
 void cursorMoveLeft(int columnAmount = 1) {
@@ -369,7 +335,7 @@ void screenRestore() {
     write("\033[?47l");
 }
 
-/// Enabled/Disables alternative screen buffer. 
+/// Enabled/Disables alternative screen buffer.
 void screenEnableAltBuffer() {
     write("\033[?1049h");
 }
@@ -393,7 +359,7 @@ void bell() {
     write("\a");
 }
 
-/** 
+/**
 Intended to be used in SIGINT callback
 Resets all formatting and shows cursor
 */

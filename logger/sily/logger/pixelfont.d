@@ -97,7 +97,7 @@ private dstring getPixelSet(int charw, int charh)(string s, ref const(dstring[ch
 private const dstring[char] pixelFont5x6;
 private const dstring[char] pixelFont3x4;
 
-static this() { 
+shared static this() { 
     pixelFont5x6 = [
     '\0':"      " ~ 
          "      " ~ 

@@ -22,13 +22,13 @@ ColorSupport terminalColorSupport(ColorSupport defaultColor = ColorSupport.ansi8
     } else
     if (env == "24bit") {
         return ColorSupport.ansi256;
-    } else 
+    } else
     if (env == "8bit") {
         return ColorSupport.ansi8;
     }
-    
+
     string fp = (tempDir ~ "/sily-dlang-terminal-temp.txt").fixPath();
-    
+
     // TODO: rewrite with execute
     File tf = File(fp, "w+");
     wait(spawnProcess(["tput", "colors"], stdin, tf));
@@ -85,3 +85,4 @@ enum ErrorCode {
 void sleep(uint msecs) {
     Thread.sleep(msecs.dmsecs);
 }
+
