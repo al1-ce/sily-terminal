@@ -1,8 +1,11 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "logtest"
-dependency "sily" path="/g:/sily-dlang/"
-dependency "sily-terminal:logger" path="/g:/sily-terminal/"
+dependency "sily" version="~>4"
+dependency "sily-terminal:logger" path="../"
+dependency "sily-terminal" path="../"
+targetType "executable"
+targetPath "../bin/"
 +/
 module test.log;
 
@@ -22,8 +25,8 @@ void main() {
     log("Testing normal log");
     hr('=');
     message("LogLevel: off");
-    globalLogLevel = LogLevel.off;
-    log!(LogLevel.off)("Using off level with off to display at any time");
+    // globalLogLevel = LogLevel.off;
+    // log!(LogLevel.off)("Using off level with off to display at any time");
     // log("Should not see");
     // hr();
     // message("LogLevel: fatal");
@@ -43,7 +46,7 @@ void main() {
     // log!(LogLevel.fatal)("Should not see fatal");
     // hr();
     message("LogLevel: all");
-    globalLogLevel = LogLevel.all;
+    // globalLogLevel = LogLevel.all;
 
 
     // writef("\033[2J");

@@ -476,8 +476,8 @@ void block(dstring title, dstring message, int width = -1, int _align = -1, bool
     }
 
     if (__logFormatEnabled) {
-        foreach (line; titles) writef("%*s\033[1;7m %*-s\033[m\n", _alignSize, "", maxLen, line);
-        foreach (line; lines) writef("%*s\033[3;7;2m %*-s\033[m\n", _alignSize, "", maxLen, line);
+        foreach (line; titles) writef("%*s\033[1;4;7m %*-s\033[m\n", _alignSize, "", maxLen, line);
+        foreach (line; lines) writef("%*s\033[7m %*-s\033[m\n", _alignSize, "", maxLen, line);
     } else {
         foreach (line; titles) writef("%*s %*-s\n", _alignSize, "", maxLen, line);
         foreach (line; lines) writef("%*s %*-s\n", _alignSize, "", maxLen, line);

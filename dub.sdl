@@ -4,7 +4,7 @@ authors "Alisa Lain"
 copyright "Copyright © 2023, Alisa Lain"
 license "MIT"
 
-dependency "sily" version="~>3.0.0"
+dependency "sily" version="~>4"
 dependency "speedy-stdio" version="0.2.0" optional=true
 targetType "library"
 targetPath "lib"
@@ -13,7 +13,7 @@ importPaths "terminal/"
 
 subPackage {
 	name "logger"
-    dependency "sily" version="~>3.0.0"
+    dependency "sily" version="~>4"
 	dependency "sily-terminal" version="*"
 	targetType "library"
 	targetPath "lib"
@@ -23,7 +23,7 @@ subPackage {
 
 subPackage {
 	name "tui"
-    dependency "sily" version="~>3.0.0"
+    dependency "sily" version="~>4"
 	dependency "sily-terminal:logger" version="*"
 	dependency "sily-terminal" version="*"
     dependency "speedy-stdio" version="0.2.0" optional=true

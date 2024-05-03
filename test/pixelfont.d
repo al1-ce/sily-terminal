@@ -1,8 +1,11 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "pixelfont"
-dependency "sily" path="/g/sily-dlang/"
-dependency "sily-terminal:logger" path="/g/sily-terminal/"
+dependency "sily" version="~>4"
+dependency "sily-terminal:logger" path="../"
+dependency "sily-terminal" path="../"
+targetType "executable"
+targetPath "../bin/"
 +/
 import std.stdio: writeln;
 

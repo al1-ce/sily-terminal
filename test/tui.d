@@ -1,16 +1,13 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "tui-test"
-description "A minimal D application."
-authors "Alisa Lain"
-copyright "Copyright © 2022, Alisa Lain"
-license "proprietary"
-dependency "sily" path="/g:/sily-dlang/"
-dependency "sily-terminal:tui" path="/g:/sily-terminal/"
-dependency "sily-terminal" path="/g:/sily-terminal/"
-dependency "sily-terminal:logger" path="/g:/sily-terminal/"
+dependency "sily" version="~>4"
+dependency "sily-terminal:tui" path="../"
+dependency "sily-terminal:logger" path="../"
+dependency "sily-terminal" path="../"
 // dependency "speedy-stdio" version="0.2.0"
 targetType "executable"
+targetPath "../bin/"
 +/
 module test.tui;
 
@@ -28,7 +25,7 @@ import std.stdio;
 
 /*
 TODO: tui features
- -[x] child on child overlap
+ -[ ] child on child overlap
  -[ ] mouse events
  -[ ] canvas functionality
  -[ ] string parser

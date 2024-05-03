@@ -1,9 +1,11 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "termiotest"
-dependency "sily" path="/g:/sily-dlang/"
-dependency "sily-terminal:logger" path="/g:/sily-terminal/"
-dependency "sily-terminal" path="/g:/sily-terminal/"
+dependency "sily" version="~>4"
+dependency "sily-terminal:logger" path="../"
+dependency "sily-terminal" path="../"
+targetType "executable"
+targetPath "../bin/"
 +/
 module test.termio;
 

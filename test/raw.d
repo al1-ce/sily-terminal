@@ -1,9 +1,11 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "coniotest"
-dependency "sily" path="/g/sily-dlang/"
-dependency "sily-terminal:logger" path="/g/sily-terminal/"
-dependency "sily-terminal" path="/g/sily-terminal/"
+dependency "sily" version="~>4"
+dependency "sily-terminal:logger" path="../"
+dependency "sily-terminal" path="../"
+targetType "executable"
+targetPath "../bin/"
 +/
 
 import std.stdio: writef;
@@ -16,29 +18,15 @@ import sily.bashfmt;
 import sily.vector;
 import sily.color;
 
-void main() {
+import core.sys.posix.sys.ioctl: ioctl;
+import sily.terminal.linux.kd: KDSKBMODE, K_RAW, K_XLATE, K_MEDIUMRAW;
 
-    writef("Preparing alternative buffer\n");
-    sleep(100);
-    eraseLines(2);
-    writef("Preparing alternative buffer.\n");
-    sleep(100);
-    eraseLines(2);
-    writef("Preparing alternative buffer..\n");
-    sleep(100);
-    eraseLines(2);
-    writef("Preparing alternative buffer...\n");
-    sleep(100);
-    trace!(__LINE__, "conio")("Terminal mode set to raw");
-    sleep(200);
-    // info(getCursorPosition().toString);
-    int key;
-    setTitle("Test app cool");
-    screenEnableAltBuffer();
-    writef("Press key: \n");
+void main() {
+    writef("Press key (Press CTRL+Q to exit): \n");
     terminalModeSetRaw();
     mouseEnable();
 
+    int key;
     bool quit = false;
     int i = 0;
     while (!quit) {
@@ -51,7 +39,7 @@ void main() {
             if (key == 17) { // C-q
                 quit = true;
                 writef("\r\n");
-                warning("Quitting");
+                writef("Quitting");
                 writef("\r");
                 break;
             // } else {
@@ -67,6 +55,4 @@ void main() {
     }
     mouseDisable();
     terminalModeReset();
-    screenDisableAltBuffer();
-    trace!(__LINE__, "conio")("Reset terminal mode");
 }
